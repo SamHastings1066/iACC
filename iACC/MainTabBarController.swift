@@ -3,6 +3,7 @@
 //
 
 import UIKit
+import SwiftUI
 
 class MainTabBarController: UITabBarController {
 	
@@ -54,30 +55,35 @@ class MainTabBarController: UITabBarController {
 		return vc
 	}
 	
-	private func makeFriendsList() -> ListViewController {
-		let vc = ListViewController()
-        vc.title = "Friends"
-        vc.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: vc, action: #selector(addFriend))
+	//private func makeFriendsList() -> ListViewController {
+		//let vc = ListViewController()
+    private func makeFriendsList() -> UIViewController {
+
+        weak var lazyVC: UIHostingController<ListView>?
         
         let isPremium = User.shared?.isPremium == true
         
         let api = FriendsAPIItemsServiceAdapter(
             api: FriendsAPI.shared,
             cache: isPremium ? friendsCache : NullFriendsCache(),
-            select: { [weak vc] item in
-                vc?.select(friend: item)
+            select: { item in
+                lazyVC?.select(friend: item)
             }
         ).retry(2)
         
         let cache = FriendsCacheItemsServiceAdapter(
             cache: friendsCache,
-            select: { [weak vc] item in
-                vc?.select(friend: item)
+            select: { item in
+                lazyVC?.select(friend: item)
             }
         )
         
-        vc.service = isPremium ? api.fallback(cache) : api
+        let service = isPremium ? api.fallback(cache) : api
         
+        let vc = UIHostingController(rootView: ListView(service: service))
+        vc.title = "Friends"
+        vc.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: vc, action: #selector(addFriend))
+        lazyVC = vc
 		return vc
 	}
 	

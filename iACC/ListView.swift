@@ -18,9 +18,20 @@ struct ListView: View {
     let service: ItemsService
     
     var body: some View {
-        List {
+        List(items, id: \.title) { item in
             
+            Button {
+                item.select()
+            } label: {
+                VStack(alignment: .leading) {
+                    Text(item.title)
+                    Text(item.subTitle)
+                        .font(.caption)
+                }
+            }
+
         }
+        .listStyle(.plain)
         .refreshable { await refresh() }
         .task {
             if items.isEmpty {
@@ -35,14 +46,9 @@ struct ListView: View {
     }
     
     private func refresh() async {
-        service.loadItems(completion: handleAPIResult)
-    }
-    
-    private func handleAPIResult(_ result: Result<[ItemViewModel], Error>) {
-        switch result {
-        case let .success(items):
-            self.items = items
-        case let .failure(error):
+        do {
+            self.items = try await service.loadItems()
+        } catch {
             self.error = error
         }
     }

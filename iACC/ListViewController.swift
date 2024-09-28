@@ -5,9 +5,6 @@
 
 import UIKit
 
-protocol ItemsService {
-    func loadItems(completion: @escaping (Result<[ItemViewModel], any Error>) -> Void)
-}
 
 class ListViewController: UITableViewController {
     var items = [ItemViewModel]()
